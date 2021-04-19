@@ -1,0 +1,5 @@
+# for each isolated python environment need to install these
+# dependencies like so:
+# pip install  -r requirements.txt
+Flask==1.1.2
+google-cloud-datastore==2.1.0
