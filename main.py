@@ -73,9 +73,16 @@ def boats_put_patch_delete(id):
         client.put(boat)
         return ('',200)
     elif request.method == 'DELETE':
-        key = client.key(constants.boats, int(id))
-        client.delete(key)
-        return ('',200)
+        boat_key = client.key(constants.boats, int(id))
+        if (boat_key != None):
+            boat = client.get(key=boat_key)
+            if (boat != None):
+                client.delete(boat_key)
+                return ('', 204)
+            else:
+                return (json.dumps({"Error": "No boat with this boat_id exists"}), 404)
+        else:
+            return (json.dumps({"Error": "No boat with this boat_id exists"}), 404)
     elif request.method == 'GET':
         boat_key = client.key(constants.boats, int(id))
         if (boat_key != None):
@@ -136,9 +143,16 @@ def slips_put_delete(id):
         client.put(slip)
         return ('',200)
     elif request.method == 'DELETE':
-        key = client.key(constants.slips, int(id))
-        client.delete(key)
-        return ('',200)
+        slip_key = client.key(constants.slips, int(id))
+        if (slip_key != None):
+            slip = client.get(key=slip_key)
+            if (slip != None):
+                client.delete(slip_key)
+                return ('', 204)
+            else:
+                return (json.dumps({"Error": "No slip with this slip_id exists"}), 404)
+        else:
+            return (json.dumps({"Error": "No slip with this slip_id exists"}), 404)
     elif request.method == 'GET':
         slip_key = client.key(constants.slips, int(id))
         if (slip_key != None):
