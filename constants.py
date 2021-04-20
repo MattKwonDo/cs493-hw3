@@ -1,1 +1,2 @@
-lodgings = "lodgings"
+slips = "slips"
+boats = "boats"

@@ -8,19 +8,39 @@ client = datastore.Client()
 
 @app.route('/')
 def index():
-    return "Please navigate to /lodgings to use this API"\
+    return "Please navigate to /slips to use this API"\
 
-@app.route('/lodgings', methods=['POST','GET'])
-def lodgings_get_post():
+@app.route('/slips', methods=['POST','GET'])
+def slips_get_post():
     if request.method == 'POST':
         content = request.get_json()
-        new_lodging = datastore.entity.Entity(key=client.key(constants.lodgings))
-        new_lodging.update({"name": content["name"], "description": content["description"],
-          "price": content["price"]})
-        client.put(new_lodging)
-        return str(new_lodging.key.id)
+        if "number" in content:
+            new_slip = datastore.entity.Entity(key=client.key(constants.slips))
+            # None ~= Null in python
+            new_slip.update({"number": content["number"], "current_boat": None})
+            print(new_slip) # <Entity('slips', 5746980898734080) {'number': 1}>
+            client.put(new_slip)
+            # putResult = client.put(new_slip) # print(putResult) == "None"
+            # need to return object and also append the id to the object, 
+            # append ex was in one of lectures I think
+            # return (f"{new_slip.key.id}",201)
+            query = client.query(kind=constants.slips)
+            results = list(query.fetch())
+            
+            # slip_num = new_slip['number']
+            # print(str(slip_num)) # == 1
+            slip_key = client.key(constants.slips, new_slip.key.id)
+            print(str(slip_key))
+            slip = client.get(key=slip_key)
+            
+            # for e in slip:
+            slip["id"] = new_slip.key.id
+            slip["self"] = str(request.url_root) + 'slips/' + str(new_slip.key.id)
+            return (json.dumps(slip), 201)
+        else:
+            return (json.dumps({"Error": "The request object is missing the required number"}), 400)
     elif request.method == 'GET':
-        query = client.query(kind=constants.lodgings)
+        query = client.query(kind=constants.slips)
         results = list(query.fetch())
         for e in results:
             e["id"] = e.key.id
@@ -28,24 +48,24 @@ def lodgings_get_post():
     else:
         return 'Method not recognized'
 
-@app.route('/lodgings/<id>', methods=['PUT','DELETE','GET'])
-def lodgings_put_delete(id):
+@app.route('/slips/<id>', methods=['PUT','DELETE','GET'])
+def slips_put_delete(id):
     if request.method == 'PUT':
         content = request.get_json()
-        lodging_key = client.key(constants.lodgings, int(id))
-        lodging = client.get(key=lodging_key)
-        lodging.update({"name": content["name"], "description": content["description"],
+        slip_key = client.key(constants.slips, int(id))
+        slip = client.get(key=slip_key)
+        slip.update({"name": content["name"], "description": content["description"],
           "price": content["price"]})
-        client.put(lodging)
+        client.put(slip)
         return ('',200)
     elif request.method == 'DELETE':
-        key = client.key(constants.lodgings, int(id))
+        key = client.key(constants.slips, int(id))
         client.delete(key)
         return ('',200)
     elif request.method == 'GET':
-        lodging_key = client.key(constants.lodgings, int(id))
-        lodging = client.get(key=lodging_key)
-        return json.dumps(lodging)
+        slip_key = client.key(constants.slips, int(id))
+        slip = client.get(key=slip_key)
+        return json.dumps(slip)
     else:
         return 'Method not recognized'
 
