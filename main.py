@@ -138,7 +138,7 @@ def slips_put_delete(id):
         content = request.get_json()
         slip_key = client.key(constants.slips, int(id))
         slip = client.get(key=slip_key)
-        slip.update({"name": content["name"], "description": content["description"],
+        slip.update({"number": content["number"], "current_boat": content["current_boat"],
           "price": content["price"]})
         client.put(slip)
         return ('',200)
@@ -167,6 +167,33 @@ def slips_put_delete(id):
             return (json.dumps({"Error": "No slip with this slip_id exists"}), 404)
     else:
         return 'Method not recognized'
+
+@app.route('/slips/<slip_id>/<boat_id>', methods=['PUT'])
+def slips_boats_put(slip_id, boat_id):
+    if request.method == 'PUT':
+        slip_key = client.key(constants.slips, int(slip_id))
+        # errorMsg = "The specified boat and/or slip does not exist"
+        if (slip_key != None):
+            slip = client.get(key=slip_key)
+            if (slip != None):  
+                if (slip["current_boat"] != None): 
+                    return (json.dumps({"Error": "The slip is not empty"}), 403)
+
+                boat_key = client.key(constants.boats, int(boat_id))
+                if (boat_key != None):
+                    boat = client.get(key=boat_key)
+                    if (boat == None):
+                        return (json.dumps({"Error": "The specified boat and/or slip does not exist"}), 404)
+                else:
+                    return (json.dumps({"Error": "The specified boat and/or slip does not exist"}), 404)
+            else:
+                return (json.dumps({"Error": "The specified boat and/or slip does not exist"}), 404)
+        else:
+            return (json.dumps({"Error": "The specified boat and/or slip does not exist"}), 404)
+        
+        slip.update({"number": slip["number"], "current_boat": boat_id})
+        client.put(slip)
+        return ('',204)
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8080, debug=True)
