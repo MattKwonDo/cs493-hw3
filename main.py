@@ -128,6 +128,13 @@ def slips_get_post():
         results = list(query.fetch())
         for e in results:
             e["id"] = e.key.id
+            # print(f"slip: {e}")
+            # try:
+            #     slipsCurrentBoat = e["current_boat"]
+            #     if (slipsCurrentBoat == None):
+            #         e["current_boat"] = None
+            # except:
+            #     e["current_boat"] = None
         return json.dumps(results)
     else:
         return 'Method not recognized'
@@ -160,6 +167,13 @@ def slips_put_delete(id):
             if (slip != None):
                 slip["id"] = slip.key.id
                 slip["self"] = str(request.url_root) + 'slips/' + str(slip.key.id)
+                # print(f"slip: {slip}")
+                # try:
+                #     slipsCurrentBoat = slip["current_boat"]
+                #     if (slipsCurrentBoat == None):
+                #         slip["current_boat"] = None
+                # except:
+                #     slip["current_boat"] = None
                 return (json.dumps(slip), 200)
             else:
                 return (json.dumps({"Error": "No slip with this slip_id exists"}), 404)
@@ -182,7 +196,21 @@ def slips_boats_put(slip_id, boat_id):
                 boat_key = client.key(constants.boats, int(boat_id))
                 if (boat_key != None):
                     boat = client.get(key=boat_key)
-                    if (boat == None):
+                    # print(f"boat: {boat}")
+                    if (boat != None):
+                        # make sure boat is not assigned to another slip
+                        query = client.query(kind=constants.slips)
+                        results = list(query.fetch())
+                        for e in results:
+                            print(f"slip: {e}")
+                            try:
+                                slipsCurrentBoat = e["current_boat"]
+                                if (int(slipsCurrentBoat) != None and slipsCurrentBoat == int(boat_id)):
+                                    print(f"Bad Request, this boat is assigned to slip {e.key.id}")
+                                    return (json.dumps({"Error": f"Bad Request, this boat is assigned to slip {e.key.id}"}), 400)
+                            except:
+                                print(f"do nothing")
+                    else:
                         return (json.dumps({"Error": "The specified boat and/or slip does not exist"}), 404)
                 else:
                     return (json.dumps({"Error": "The specified boat and/or slip does not exist"}), 404)
@@ -191,7 +219,7 @@ def slips_boats_put(slip_id, boat_id):
         else:
             return (json.dumps({"Error": "The specified boat and/or slip does not exist"}), 404)
         
-        slip.update({"number": slip["number"], "current_boat": boat_id})
+        slip.update({"number": slip["number"], "current_boat": int(boat_id)})
         client.put(slip)
         return ('',204)
 
